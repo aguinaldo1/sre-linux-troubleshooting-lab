@@ -4,9 +4,16 @@ After=network.target
 
 [Service]
 Type=simple
-User=aguin
-WorkingDirectory=/home/aguin/sre-portfolio/sre-linux-troubleshooting-lab
+
+# Replace YOUR_USER with your Linux username.
+User=YOUR_USER
+
+# Replace /path/to/sre-linux-troubleshooting-lab
+# with the absolute path where the repository was cloned.
+WorkingDirectory=/path/to/sre-linux-troubleshooting-lab
+
 ExecStart=/usr/bin/java -cp app SreLabApp
+
 Restart=on-failure
 RestartSec=3
 
