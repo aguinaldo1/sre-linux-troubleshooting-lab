@@ -289,3 +289,11 @@ incidents/
 
 Cada relatório registra as evidências, diagnóstico, causa raiz, mitigação, validação e principais aprendizados do respectivo incidente.
 
+## Uso de Inteligência Artificial
+
+Ferramentas de Inteligência Artificial foram utilizadas como apoio durante o desenvolvimento deste projeto, principalmente para orientação, revisão de documentação e organização do conteúdo.
+
+Os experimentos, comandos, configurações, simulações de incidentes, coleta de evidências, troubleshooting e validações foram executados e analisados pelo autor.
+
+O objetivo do uso de IA neste projeto foi acelerar o aprendizado e melhorar a qualidade da documentação, mantendo a compreensão e a responsabilidade técnica sobre as implementações apresentadas.
+
