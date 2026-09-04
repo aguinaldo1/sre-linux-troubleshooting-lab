@@ -1,0 +1,72 @@
+INC-003 - Memory Pressure
+Evidence: Post-Mitigation Validation
+Environment: Linux / WSL2
+
+=== Mitigation ===
+
+The controlled Python processes were terminated by pressing ENTER
+in each terminal where the memory allocation was active.
+
+This allowed the allocated memory to be released.
+
+
+=== Memory Validation ===
+
+Command:
+
+free -h
+
+Observed after releasing the controlled allocations:
+
+Used memory: approximately 840 MiB
+Free memory: approximately 1.7 GiB
+Available memory: approximately 2.7 GiB
+
+Swap used: approximately 27 MiB
+
+
+=== Comparison ===
+
+Before the incident:
+
+Used memory: approximately 920 MiB
+Available memory: approximately 2.7 GiB
+Swap used: approximately 20 MiB
+
+During the highest controlled pressure:
+
+Used memory: approximately 2.4 GiB
+Free memory: approximately 121 MiB
+Available memory: approximately 1.2 GiB
+Swap used: approximately 27 MiB
+
+After mitigation:
+
+Used memory: approximately 840 MiB
+Free memory: approximately 1.7 GiB
+Available memory: approximately 2.7 GiB
+Swap used: approximately 27 MiB
+
+
+=== Validation Result ===
+
+After the controlled Python processes were terminated, available
+memory returned from approximately 1.2 GiB to approximately
+2.7 GiB.
+
+Used memory decreased from approximately 2.4 GiB during the
+controlled pressure to approximately 840 MiB.
+
+The measurements confirmed that the memory consumed by the
+controlled workload was released.
+
+
+=== Investigation Boundary ===
+
+Swap usage remained at approximately 27 MiB after the controlled
+workload was removed.
+
+No out-of-memory condition was observed during the experiment.
+
+No OOM event was intentionally triggered because sufficient
+evidence of controlled memory pressure had already been collected.

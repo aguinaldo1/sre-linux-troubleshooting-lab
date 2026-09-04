@@ -1,0 +1,69 @@
+INC-002 - CPU Saturation
+Evidence: Post-Mitigation Validation
+Environment: Linux / WSL2
+
+=== Mitigation ===
+
+The controlled CPU workload was terminated using:
+
+pkill yes
+
+This command terminated the yes processes used to generate
+the controlled CPU pressure.
+
+
+=== CPU Validation ===
+
+Command:
+
+top
+
+Observed after mitigation:
+
+CPU idle: approximately 80.0%
+
+Load average:
+
+1 minute: 0.99
+5 minutes: 0.99
+15 minutes: 2.42
+
+
+=== Baseline Comparison ===
+
+Before the incident:
+
+CPU idle: approximately 82.8%
+1-minute load average: 0.59
+
+During the incident:
+
+CPU idle: 0.0%
+1-minute load average: 5.12
+
+After mitigation:
+
+CPU idle: approximately 80.0%
+1-minute load average: 0.99
+
+
+=== Validation Result ===
+
+After the controlled yes processes were terminated, CPU idle
+increased from 0.0% to approximately 80.0%.
+
+The 1-minute load average decreased from 5.12 during the
+controlled incident to 0.99 after mitigation.
+
+The measurements confirmed that CPU capacity became available
+again after the controlled workload was removed.
+
+
+=== Investigation Boundary ===
+
+Separate I/O wait activity was observed in the environment after
+the CPU experiment.
+
+That activity was not attributed to the CPU saturation incident
+because there was not sufficient evidence to establish that
+relationship.

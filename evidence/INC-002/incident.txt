@@ -1,0 +1,75 @@
+INC-002 - CPU Saturation
+Evidence: Incident
+Environment: Linux / WSL2
+
+=== Controlled CPU Workload ===
+
+A controlled CPU workload was generated using the yes command.
+
+Initial test:
+
+yes > /dev/null
+
+Observed:
+
+Process: yes
+PID: 49852
+CPU usage: approximately 94.7%
+
+
+=== CPU Saturation Test ===
+
+Four yes processes were executed simultaneously to generate
+CPU pressure across the available CPUs.
+
+Observed during the controlled workload:
+
+Available CPUs: 4
+
+CPU idle: 0.0%
+
+CPU distribution observed:
+
+User CPU: approximately 13.5%
+System CPU: approximately 51.0%
+Nice CPU: approximately 35.4%
+
+
+=== Load Average ===
+
+Observed during CPU saturation:
+
+1 minute: 5.12
+5 minutes: 4.63
+15 minutes: 3.05
+
+
+=== Process-Level Evidence ===
+
+The four controlled yes processes were observed consuming
+approximately 88% to 95% CPU each.
+
+
+=== Baseline Comparison ===
+
+Before the controlled workload:
+
+CPU idle: approximately 82.8%
+1-minute load average: 0.59
+
+During the controlled workload:
+
+CPU idle: 0.0%
+1-minute load average: 5.12
+
+
+=== Evidence Correlation ===
+
+The increase in load average occurred while the controlled
+CPU-intensive processes were running.
+
+CPU idle dropped from approximately 82.8% to 0.0%.
+
+With 4 available CPUs and a 1-minute load average of 5.12,
+the environment showed CPU demand exceeding the available
+processing capacity during the experiment.

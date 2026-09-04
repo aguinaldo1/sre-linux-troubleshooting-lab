@@ -1,0 +1,46 @@
+INC-003 - Memory Pressure
+Evidence: Baseline
+Environment: Linux / WSL2
+
+=== Memory Baseline ===
+
+Command:
+
+free -h
+
+Observed before the controlled memory workload:
+
+Total memory: approximately 3.8 GiB
+Used memory: approximately 920 MiB
+Free memory: approximately 1.6 GiB
+Available memory: approximately 2.7 GiB
+
+Swap total: approximately 1.0 GiB
+Swap used: approximately 20 MiB
+
+
+=== Process Observation ===
+
+Processes were inspected to identify relevant memory consumers.
+
+One of the processes observed in the environment was:
+
+Process: kube-apiserver
+RSS: approximately 258340 KiB
+
+
+=== Controlled Workload Status ===
+
+The Python processes used later to generate controlled memory
+pressure were not running during this baseline.
+
+
+=== Baseline Result ===
+
+Before the controlled experiment, approximately 2.7 GiB of memory
+was reported as available by the operating system.
+
+Swap usage was approximately 20 MiB.
+
+These measurements provide the baseline for comparison with the
+memory pressure generated during the experiment.

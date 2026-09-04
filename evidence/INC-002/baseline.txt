@@ -1,0 +1,45 @@
+INC-002 - CPU Saturation
+Evidence: Baseline
+Environment: Linux / WSL2
+
+=== CPU Capacity ===
+
+Command:
+
+nproc
+
+Observed:
+
+Available CPUs: 4
+
+
+=== CPU Baseline ===
+
+Command:
+
+top
+
+Observed before the controlled CPU workload:
+
+CPU idle: approximately 82.8%
+
+Load average:
+
+1 minute: 0.59
+5 minutes: 0.76
+15 minutes: 1.02
+
+
+=== Controlled Workload Status ===
+
+No controlled yes processes used by this experiment were running
+during the baseline observation.
+
+
+=== Baseline Result ===
+
+The environment had available CPU capacity before the controlled
+CPU saturation experiment.
+
+The baseline will be compared with measurements collected while
+multiple CPU-intensive processes are running.

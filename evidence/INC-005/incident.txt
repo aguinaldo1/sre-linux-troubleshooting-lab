@@ -1,0 +1,129 @@
+INC-005 - Port Connectivity Failure
+Evidence: Incident
+Environment: Linux / WSL2
+
+=== Controlled Configuration Change ===
+
+The application listening port was intentionally changed.
+
+Healthy configuration:
+
+new InetSocketAddress(8080)
+
+Controlled faulty configuration:
+
+new InetSocketAddress(8081)
+
+After the change, the Java application was recompiled and the
+systemd service was restarted.
+
+
+=== Expected Port Test ===
+
+The client continued attempting to access the application on the
+expected port:
+
+8080
+
+Command:
+
+curl -i http://localhost:8080/health
+
+Observed:
+
+Connection refused
+
+The application was no longer listening on the port expected by
+the client.
+
+
+=== Socket Investigation ===
+
+Command:
+
+ss -ltnp
+
+Observed:
+
+The Java process was listening on:
+
+*:8081
+
+Process:
+
+java
+
+No application listener was found on the expected port 8080.
+
+
+=== Alternative Port Test ===
+
+Command:
+
+curl -i http://localhost:8081/health
+
+Observed:
+
+HTTP status: 200
+
+Response body:
+
+{"status":"ok"}
+
+
+=== Service State ===
+
+The application process remained operational during the incident.
+
+The failure was therefore not caused by the Java application being
+unable to start.
+
+The application was reachable through port 8081 while clients
+expecting port 8080 received a connection refusal.
+
+
+=== Log Inconsistency ===
+
+During the investigation, the application log still displayed:
+
+SRE Lab App listening on port 8080
+
+However, socket-level evidence from ss showed that the Java process
+was actually listening on port 8081.
+
+The message was hardcoded in the Java application and did not
+reflect the actual runtime port configuration.
+
+
+=== Evidence Correlation ===
+
+Client request:
+
+localhost:8080
+        |
+        -> Connection refused
+
+Socket inspection:
+
+java -> *:8081
+
+Direct test:
+
+localhost:8081/health
+        |
+        -> HTTP 200
+        -> {"status":"ok"}
+
+
+=== Diagnosis Supported by Evidence ===
+
+The connectivity failure was caused by a port mismatch.
+
+The client expected the application on port 8080, while the
+application was listening on port 8081.
+
+The application itself remained functional.
+
+Socket-level evidence was considered more reliable than the
+hardcoded application log when determining the actual listening
+port.

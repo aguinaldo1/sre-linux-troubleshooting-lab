@@ -1,0 +1,89 @@
+INC-003 - Memory Pressure
+Evidence: Incident
+Environment: Linux / WSL2
+
+=== Controlled Memory Workload ===
+
+A controlled memory workload was generated using Python.
+
+Command:
+
+python3 -c "a=bytearray(768*1024*1024); input('768 MiB allocated. Press ENTER to release memory...')"
+
+The process allocated approximately 768 MiB of memory and kept
+the allocation active while waiting for user input.
+
+
+=== First Memory Allocation ===
+
+Command:
+
+free -h
+
+Observed after starting the first controlled Python process:
+
+Used memory: approximately 1.6 GiB
+Free memory: approximately 826 MiB
+Available memory: approximately 1.9 GiB
+Swap used: approximately 20 MiB
+
+Process-level observation:
+
+Process: python3
+PID: 57557
+Memory usage: approximately 20%
+RSS: approximately 794880 KiB
+
+
+=== Second Memory Allocation ===
+
+A second controlled Python process was started using the same
+768 MiB allocation.
+
+Observed with both controlled allocations active:
+
+Used memory: approximately 2.4 GiB
+Free memory: approximately 121 MiB
+Available memory: approximately 1.2 GiB
+Swap used: approximately 27 MiB
+
+
+=== Baseline Comparison ===
+
+Before the controlled workload:
+
+Used memory: approximately 920 MiB
+Free memory: approximately 1.6 GiB
+Available memory: approximately 2.7 GiB
+Swap used: approximately 20 MiB
+
+During the highest controlled memory pressure:
+
+Used memory: approximately 2.4 GiB
+Free memory: approximately 121 MiB
+Available memory: approximately 1.2 GiB
+Swap used: approximately 27 MiB
+
+
+=== Evidence Correlation ===
+
+Memory usage increased while the controlled Python allocations
+were active.
+
+Available memory decreased from approximately 2.7 GiB to
+approximately 1.2 GiB.
+
+Swap usage increased only slightly, from approximately 20 MiB
+to approximately 27 MiB.
+
+
+=== Investigation Boundary ===
+
+Although free memory decreased to approximately 121 MiB, the
+system still reported approximately 1.2 GiB of available memory.
+
+Therefore, low free memory alone was not treated as evidence of
+an out-of-memory condition.
+
+The experiment was intentionally stopped without increasing the
+memory allocation further.

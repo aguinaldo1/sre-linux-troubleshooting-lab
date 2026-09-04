@@ -1,0 +1,29 @@
+INC-001 - I/O Saturation
+Evidence: Baseline
+Environment: Linux / WSL2
+
+=== CPU ===
+Command:
+top
+
+Observed:
+CPU idle: 84.3%
+I/O wait: 8.9%
+
+=== Disk Capacity ===
+Command:
+df -h
+
+Observed root filesystem:
+Device: /dev/sdd
+Total: 1007G
+Used: approximately 34-35G
+Usage: 4%
+
+=== Initial Observation ===
+The environment had significant CPU capacity available before
+the controlled I/O workload.
+
+The root filesystem also had sufficient storage capacity available.
+
+No controlled I/O workload was running during this baseline.

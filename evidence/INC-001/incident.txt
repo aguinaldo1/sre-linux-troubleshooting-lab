@@ -1,0 +1,86 @@
+INC-001 - I/O Saturation
+Evidence: Incident
+Environment: Linux / WSL2
+
+=== Controlled Workload ===
+
+Command used to generate write activity:
+
+dd if=/dev/zero of=io-test-file bs=1M count=4096 conv=fdatasync
+
+Observed during the controlled workload:
+
+Approximately 4.1 GB copied before interruption.
+Elapsed time: approximately 2982.84 seconds.
+Observed throughput: approximately 1.4 MB/s.
+
+
+=== Device-Level I/O ===
+
+Command:
+
+iostat -xz 1 5
+
+Observed samples during the investigation:
+
+I/O wait reached approximately: 46.15%
+Device: /dev/sdd
+Device utilization reached approximately: 95.20%
+
+Increased write latency and queue activity were observed during
+the controlled workload.
+
+Earlier samples also included:
+
+iowait: 22.70%
+r_await: 70.86 ms
+w_await: 201.76 ms
+aqu-sz: 2.80
+util: 55.96%
+
+Another sample included:
+
+iowait: 30.63%
+w_await: 57.17 ms
+f_await: 86.53 ms
+aqu-sz: 2.50
+util: 80.00%
+
+
+=== Process-Level I/O ===
+
+A smaller controlled write test was later executed:
+
+dd if=/dev/zero of=io-test-file bs=1M count=256 conv=fdatasync
+
+Command used to observe process I/O:
+
+pidstat -d 1
+
+Observed:
+
+Process: dd
+PID: 33582
+Write activity: approximately 262144 kB/s
+
+
+=== Block Device ===
+
+Command:
+
+lsblk
+
+Observed:
+
+/dev/sdd was associated with the Linux root filesystem.
+
+The Docker data directory was also located on the root filesystem.
+
+
+=== Evidence Correlation ===
+
+During the controlled workload, increased device-level I/O activity
+was observed while the dd process was generating intensive writes.
+
+pidstat provided process-level evidence identifying dd as the
+controlled writer.

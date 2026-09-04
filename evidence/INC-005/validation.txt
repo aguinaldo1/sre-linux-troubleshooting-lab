@@ -1,0 +1,98 @@
+INC-005 - Port Connectivity Failure
+Evidence: Post-Mitigation Validation
+Environment: Linux / WSL2
+
+=== Mitigation ===
+
+The application listening port was restored from:
+
+8081
+
+to the expected port:
+
+8080
+
+Java configuration restored:
+
+new InetSocketAddress(8080)
+
+After restoring the configuration, the application was recompiled
+and the systemd service was restarted.
+
+
+=== Socket Validation ===
+
+Command:
+
+ss -ltnp
+
+Observed after mitigation:
+
+The Java process was listening on:
+
+*:8080
+
+Process:
+
+java
+
+
+=== HTTP Validation ===
+
+Command:
+
+curl -i http://localhost:8080/health
+
+Observed:
+
+HTTP status: 200
+
+Response body:
+
+{"status":"ok"}
+
+
+=== Before and After ===
+
+Before the incident:
+
+Application port: 8080
+Client expected port: 8080
+HTTP result: 200
+
+During the incident:
+
+Application port: 8081
+Client expected port: 8080
+Request to port 8080: Connection refused
+Request to port 8081: HTTP 200
+
+After mitigation:
+
+Application port: 8080
+Client expected port: 8080
+HTTP result: 200
+
+
+=== Validation Result ===
+
+After restoring the application listening port to 8080, the Java
+process was again observed listening on the expected TCP port.
+
+The HTTP health endpoint returned status 200.
+
+Socket-level and application-level evidence confirmed that
+connectivity through the expected port had been restored.
+
+
+=== Reliability Lesson ===
+
+Application availability depends not only on whether the process
+is running, but also on whether clients can reach the application
+through the expected network configuration.
+
+The incident also demonstrated that hardcoded operational log
+messages can become inconsistent with the actual runtime state.
+
+Direct runtime evidence such as socket inspection should be
+correlated with application logs during troubleshooting.

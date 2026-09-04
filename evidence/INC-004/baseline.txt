@@ -1,0 +1,68 @@
+INC-004 - Service Failure
+Evidence: Baseline
+Environment: Linux / WSL2
+
+=== Service Baseline ===
+
+Service:
+
+sre-lab-app.service
+
+Command:
+
+systemctl status sre-lab-app.service
+
+Observed before the controlled failure:
+
+Service state: active (running)
+
+The Java application was running under systemd management.
+
+
+=== Application Process ===
+
+Configured Java main class:
+
+SreLabApp
+
+Service execution command:
+
+/usr/bin/java -cp app SreLabApp
+
+
+=== HTTP Health Check ===
+
+Command:
+
+curl -i http://localhost:8080/health
+
+Observed:
+
+HTTP status: 200
+
+Response body:
+
+{"status":"ok"}
+
+
+=== Application Endpoint ===
+
+Expected application port:
+
+8080
+
+Health endpoint:
+
+/health
+
+
+=== Baseline Result ===
+
+Before the controlled service failure, systemd reported the
+service as active and running.
+
+The application responded successfully to the HTTP health check
+on port 8080.
+
+This established a healthy baseline before modifying the service
+configuration to generate the controlled failure.

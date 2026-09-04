@@ -1,0 +1,76 @@
+INC-001 - I/O Saturation
+Evidence: Post-Mitigation Validation
+Environment: Linux / WSL2
+
+=== Mitigation ===
+
+The controlled dd workload was terminated.
+
+The known source of intensive write activity used during the
+experiment was therefore removed.
+
+
+=== Process-Level Validation ===
+
+Command:
+
+pidstat -d 1
+
+Observed:
+
+No process producing relevant I/O activity was identified during
+the post-mitigation observation period.
+
+
+=== Memory Writeback Validation ===
+
+The Linux memory state was inspected after the controlled workload.
+
+Observed:
+
+Dirty: approximately 104 kB
+Writeback: approximately 4 kB
+
+These values did not indicate a significant amount of pending
+writeback at the time of observation.
+
+
+=== Additional I/O Observation ===
+
+Additional I/O spikes were observed after the controlled dd
+workload had terminated.
+
+However, during those later observations:
+
+- pidstat did not identify a process producing relevant I/O;
+- Dirty memory remained very low;
+- Writeback memory remained very low.
+
+The later spikes were therefore not attributed to the original
+dd process without additional evidence.
+
+
+=== Environment Context ===
+
+Command:
+
+lsblk
+
+Observed:
+
+/dev/sdd was associated with the WSL2 Linux root filesystem.
+
+This environment context was considered when interpreting the
+device-level I/O metrics.
+
+
+=== Validation Result ===
+
+The controlled dd workload responsible for the known write activity
+was no longer running.
+
+Later I/O activity could not be directly correlated with that
+process.
+
+No claim of physical storage failure was made based on the
+available evidence.

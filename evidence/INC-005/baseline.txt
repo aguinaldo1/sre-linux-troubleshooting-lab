@@ -1,0 +1,72 @@
+INC-005 - Port Connectivity Failure
+Evidence: Baseline
+Environment: Linux / WSL2
+
+=== Application Baseline ===
+
+Application:
+
+SreLabApp
+
+Expected port:
+
+8080
+
+Health endpoint:
+
+/health
+
+
+=== HTTP Validation ===
+
+Command:
+
+curl -i http://localhost:8080/health
+
+Observed before the controlled failure:
+
+HTTP status: 200
+
+Response body:
+
+{"status":"ok"}
+
+
+=== Socket Validation ===
+
+Command:
+
+ss -ltnp
+
+Observed:
+
+The Java application was listening on TCP port 8080.
+
+Process:
+
+java
+
+Listening endpoint:
+
+*:8080
+
+
+=== Application Configuration ===
+
+The Java application was configured with:
+
+new InetSocketAddress(8080)
+
+The application and the client therefore agreed on the expected
+TCP port.
+
+
+=== Baseline Result ===
+
+Before the controlled configuration change, the Java application
+was listening on port 8080.
+
+The HTTP health endpoint responded successfully with status 200.
+
+Both socket-level and application-level checks confirmed normal
+connectivity before the controlled failure.

@@ -1,0 +1,91 @@
+INC-004 - Service Failure
+Evidence: Post-Mitigation Validation
+Environment: Linux / WSL2
+
+=== Mitigation ===
+
+The invalid Java main class configured in the systemd service was
+corrected.
+
+Faulty configuration:
+
+ExecStart=/usr/bin/java -cp app SreLabAppBroken
+
+Restored configuration:
+
+ExecStart=/usr/bin/java -cp app SreLabApp
+
+After correcting the configuration, systemd was reloaded and the
+service was restarted.
+
+Commands:
+
+sudo systemctl daemon-reload
+sudo systemctl restart sre-lab-app.service
+
+
+=== Service Validation ===
+
+Command:
+
+systemctl status sre-lab-app.service
+
+Observed after mitigation:
+
+Service state:
+
+active (running)
+
+The Java application was successfully started by systemd.
+
+
+=== HTTP Health Validation ===
+
+Command:
+
+curl -i http://localhost:8080/health
+
+Observed:
+
+HTTP status: 200
+
+Response body:
+
+{"status":"ok"}
+
+
+=== Before and After ===
+
+During the incident:
+
+Configured class: SreLabAppBroken
+Service state: activating (auto-restart)
+Process result: status=1/FAILURE
+Java error: ClassNotFoundException
+
+After mitigation:
+
+Configured class: SreLabApp
+Service state: active (running)
+HTTP health check: 200
+Response: {"status":"ok"}
+
+
+=== Validation Result ===
+
+After restoring the correct Java main class, the application
+started successfully.
+
+systemd reported the service as active and running.
+
+The HTTP health endpoint also returned status 200, confirming
+application-level recovery.
+
+
+=== Reliability Lesson ===
+
+The Restart=on-failure policy was able to restart the process,
+but it could not correct an invalid application configuration.
+
+Automatic restart should therefore not be treated as a substitute
+for root cause investigation and configuration validation.
