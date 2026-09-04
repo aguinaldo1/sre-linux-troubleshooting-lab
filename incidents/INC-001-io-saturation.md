@@ -1,86 +1,233 @@
-# INC-001 — I/O Saturation
+# INC-001 - Saturação de I/O
 
-## Summary
+## Resumo
 
-Controlled incident used to investigate Linux I/O degradation and identify the process responsible for excessive disk activity.
+Foi realizado um incidente controlado para investigar degradação de desempenho relacionada a operações de entrada e saída (I/O) em um ambiente Linux.
 
-## Symptom
+O objetivo foi aplicar uma metodologia estruturada de troubleshooting, partindo do sintoma de degradação, levantando hipóteses, coletando evidências e identificando o processo responsável pela carga de escrita durante o incidente.
 
-The environment presented high I/O wait and increased storage device utilization during a controlled write workload.
+Durante o teste foram observados aumento de `I/O wait`, maior utilização do dispositivo `/dev/sdd` e atividade intensa de escrita associada ao processo `dd`.
 
-## Initial Hypotheses
+---
 
-- CPU saturation
-- Memory pressure
-- Disk capacity issue
-- High disk I/O activity
-- Process generating excessive I/O
+## Ambiente
 
-## Evidence Collected
+- Linux executado através do WSL2
+- Sistema de arquivos raiz associado ao dispositivo `/dev/sdd`
+- Projeto executado no sistema de arquivos raiz
 
-### CPU
+Por se tratar de um ambiente virtualizado pelo WSL2, as métricas do dispositivo de bloco foram interpretadas como evidências de pressão de I/O no ambiente observado.
 
-Initial observation showed:
+Os dados coletados não são suficientes para afirmar que existe defeito ou problema físico no dispositivo de armazenamento.
 
-- CPU idle: 84.3%
-- I/O wait: 8.9%
+---
 
-This weakened the CPU saturation hypothesis and increased interest in the I/O path.
+## Sintoma
 
-### Disk Capacity
+Durante uma carga controlada de escrita, o ambiente apresentou aumento de `I/O wait` e maior utilização do dispositivo de armazenamento.
 
-The root filesystem showed approximately:
+A investigação buscou determinar se a degradação poderia estar relacionada a:
 
-- Total size: 1007 GB
-- Used: 35 GB
-- Usage: 4%
+- saturação de CPU;
+- pressão de memória;
+- falta de espaço em disco;
+- alta atividade de I/O;
+- processo consumindo excessivamente recursos de armazenamento.
 
-Disk capacity exhaustion was therefore not supported by the evidence.
+---
 
-### I/O Activity
+## Hipóteses iniciais
 
-During the controlled incident, `iostat` showed:
+As seguintes hipóteses foram consideradas:
 
-- I/O wait reaching 46.15%
-- `/dev/sdd` utilization reaching 95.20%
-- Increased write latency and queue activity
+1. Saturação de CPU
+2. Pressão de memória
+3. Falta de espaço em disco
+4. Alta atividade de I/O
+5. Processo gerando atividade excessiva de escrita
 
-### Process Identification
+As hipóteses foram investigadas progressivamente com base nas evidências coletadas.
 
-Using `pidstat`, the process responsible for the controlled write activity was identified:
+---
 
-- Process: `dd`
+## Investigação
+
+### 1. CPU
+
+A análise inicial utilizando `top` apresentou aproximadamente:
+
+- CPU idle: `84,3%`
+- I/O wait: `8,9%`
+
+O alto percentual de CPU ociosa enfraqueceu a hipótese de saturação de CPU.
+
+Ao mesmo tempo, o valor de `I/O wait` chamou atenção para uma possível espera relacionada a operações de entrada e saída.
+
+O `I/O wait`, isoladamente, não foi considerado prova de que o armazenamento era a causa raiz. Ele foi utilizado como sinal para aprofundar a investigação.
+
+---
+
+### 2. Capacidade de disco
+
+A capacidade do sistema de arquivos foi analisada utilizando:
+
+```bash
+df -h
+```
+
+O sistema de arquivos raiz apresentava aproximadamente:
+
+- Capacidade total: `1007 GB`
+- Espaço utilizado: `34-35 GB`
+- Utilização: `4%`
+
+Com apenas aproximadamente 4% da capacidade utilizada, a hipótese de falta de espaço em disco perdeu força.
+
+Essa análise também demonstrou uma distinção importante:
+
+> Capacidade de armazenamento e desempenho de armazenamento são problemas diferentes.
+
+Um disco pode possuir bastante espaço disponível e ainda apresentar pressão ou degradação de I/O.
+
+---
+
+### 3. Atividade de I/O no dispositivo
+
+A atividade do dispositivo foi analisada utilizando:
+
+```bash
+iostat -xz 1 5
+```
+
+Durante o incidente controlado foram observados valores como:
+
+- `I/O wait` chegando a `46,15%`
+- utilização de `/dev/sdd` chegando a `95,20%`
+- aumento da latência de escrita
+- aumento da atividade na fila de I/O
+
+Essas métricas demonstraram períodos de pressão significativa de I/O durante a execução da carga controlada.
+
+---
+
+### 4. Identificação do processo
+
+Depois de identificar pressão no dispositivo, a investigação avançou para descobrir qual processo estava produzindo atividade de I/O.
+
+Foi utilizado:
+
+```bash
+pidstat -d 1
+```
+
+Durante o incidente foi identificado:
+
+- Processo: `dd`
 - PID: `33582`
-- Write activity observed: approximately 262144 kB/s
+- Atividade de escrita observada: aproximadamente `262144 kB/s`
 
-## Diagnosis
+O processo `dd` havia sido iniciado intencionalmente para gerar uma carga controlada de escrita.
 
-The controlled degradation was correlated with an intensive write workload generated by the `dd` process.
+Essa evidência permitiu correlacionar a atividade do processo com a pressão de I/O observada durante o teste.
 
-The write activity occurred on the root filesystem mounted on `/dev/sdd`, which showed increased utilization and I/O wait during the incident.
+---
 
-## Mitigation
+## Diagnóstico
 
-The workload was allowed to terminate, removing the source of the controlled write pressure.
+A degradação observada durante o incidente controlado foi correlacionada com uma carga intensa de escrita gerada pelo processo `dd`.
 
-## Validation
+Durante a execução da carga:
 
-After the `dd` process terminated, additional I/O spikes were still observed.
+- o `I/O wait` aumentou significativamente;
+- `/dev/sdd` apresentou alta utilização;
+- houve aumento da latência de escrita;
+- `pidstat` identificou o processo `dd` realizando atividade intensa de escrita.
 
-Further investigation showed:
+A combinação dessas evidências sustenta a conclusão de que a carga controlada gerada pelo `dd` produziu pressão de I/O no ambiente observado.
 
-- No active process producing relevant I/O in `pidstat`
-- Very low `Dirty` and `Writeback` memory values
-- `/dev/sdd` is the block device used by the WSL2 root filesystem
+As evidências não permitem concluir que existe defeito no dispositivo físico de armazenamento.
 
-Because the later I/O spikes were not directly attributable to the original `dd` process, the incident is classified as investigated rather than fully resolved.
+---
 
-## Lessons Learned
+## Causa raiz
 
-- High CPU usage should not be assumed when an application is slow.
-- I/O wait can reveal storage-related contention.
-- Disk capacity and disk performance are different problems.
-- `iostat` helps identify device-level pressure.
-- `pidstat` helps correlate I/O activity with processes.
-- A mitigation must be followed by validation.
-- Correlation should be supported by evidence before declaring root cause.
+No contexto do incidente controlado, a causa da pressão de I/O foi a carga intensiva de escrita gerada intencionalmente pelo processo:
+
+```text
+dd
+```
+
+A identificação foi sustentada pela correlação entre as métricas do dispositivo e a atividade de escrita observada no processo.
+
+---
+
+## Mitigação
+
+A carga controlada gerada pelo `dd` foi encerrada, removendo a fonte conhecida de escrita intensiva utilizada no incidente.
+
+Nenhum serviço ou processo não relacionado foi reiniciado ou encerrado sem evidências que justificassem essa ação.
+
+---
+
+## Validação
+
+Após o encerramento do processo `dd`, foram realizadas novas verificações.
+
+Ainda foram observados alguns picos posteriores de I/O.
+
+A investigação adicional mostrou:
+
+- nenhum processo realizando atividade relevante de I/O no `pidstat`;
+- valores muito baixos de `Dirty` e `Writeback`;
+- `/dev/sdd` associado ao sistema de arquivos raiz utilizado pelo WSL2.
+
+Como os picos posteriores não puderam ser diretamente associados ao processo `dd`, eles não foram atribuídos à mesma causa raiz.
+
+Essa distinção é importante para evitar conclusões que ultrapassem as evidências disponíveis.
+
+---
+
+## Principais comandos utilizados
+
+```bash
+top
+df -h
+iostat -xz 1 5
+pidstat -d 1
+lsblk
+```
+
+### `top`
+
+Utilizado para observar CPU, `I/O wait` e processos em execução.
+
+### `df -h`
+
+Utilizado para verificar a capacidade e utilização dos sistemas de arquivos.
+
+### `iostat -xz 1 5`
+
+Utilizado para observar métricas de desempenho dos dispositivos de armazenamento.
+
+### `pidstat -d 1`
+
+Utilizado para identificar processos responsáveis por atividade de I/O.
+
+### `lsblk`
+
+Utilizado para compreender a relação entre dispositivos de bloco e sistemas de arquivos.
+
+---
+
+## Lições aprendidas
+
+- Lentidão da aplicação não significa automaticamente saturação de CPU.
+- `I/O wait` deve ser tratado como um sinal de investigação, e não como prova isolada da causa raiz.
+- Capacidade de disco e desempenho de I/O são problemas diferentes.
+- `iostat` fornece evidências sobre o comportamento dos dispositivos.
+- `pidstat` permite correlacionar atividade de I/O com processos específicos.
+- Alta utilização de um dispositivo não significa automaticamente falha física do armazenamento.
+- Métricas de dispositivos em ambientes virtualizados como WSL2 precisam ser interpretadas com cuidado.
+- Uma mitigação deve sempre ser seguida por validação.
+- A causa raiz deve ser sustentada pela correlação de múltiplas evidências.
+- Não devemos atribuir eventos posteriores a uma causa anterior sem evidências que sustentem essa relação.
