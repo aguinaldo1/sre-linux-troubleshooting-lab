@@ -1,12 +1,14 @@
-# Incident Reports
+# Relatórios de Incidentes
 
-This directory contains incident investigations performed as part of the Linux Production Troubleshooting Lab.
+Este diretório contém as investigações de incidentes realizadas como parte do projeto Linux Production Troubleshooting Lab.
 
-## Incidents
+## Incidentes
 
-| ID | Incident | Status |
+| ID | Incidente | Status |
 |---|---|---|
-| INC-001 | I/O Saturation | Investigated |
-| INC-002 | CPU Saturation | Investigated |
-| INC-003 | Memory Pressure | Investigated |
-| INC-004 | Service Failure | Investigated |
+| INC-001 | Saturação de I/O | Investigado |
+| INC-002 | Saturação de CPU | Investigado |
+| INC-003 | Pressão de Memória | Investigado |
+| INC-004 | Falha de Serviço | Investigado
+| INC-005 | Falha de Conectividade por Porta Incorreta | Investigado |
+
